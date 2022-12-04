@@ -1,4 +1,4 @@
-
+https://lab.redhat.com/tracks/sandbox
 
 * [舙](http://rhel.idlls6wdbint.instruqt.io:8080/)
 
@@ -10,9 +10,10 @@ Hello
 export HARBORIP="10.5.1.17"
 
 
-https://lab.redhat.com/tracks/sandbox
+安裝 trivy
+https://aquasecurity.github.io/trivy/v0.18.3/installation/
 
-
+在 RHEL 安裝 Docker/Docker-compose 的解法
 https://linuxconfig.org/how-to-install-docker-in-rhel-8#
 https://docs.docker.com/engine/install/rhel/
 https://github.com/goharbor/harbor/issues/13553
@@ -61,8 +62,8 @@ $ systemctl is-enabled docker
 curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o docker-compose
 sudo mv docker-compose /usr/local/bin && sudo chmod +x /usr/local/bin/docker-compose
 
-$ sudo dnf install python3-pip
-$ pip3 install docker-compose --user
+sudo dnf install python3-pip
+pip3 install docker-compose --user
 ```
 
 
@@ -81,8 +82,9 @@ $ tree .
 ├── LICENSE
 └── prepare
 
-vim /usr/local/harbor/harbor.yml
 cp harbor.yml.tmpl harbor.yml
+vim /usr/local/harbor/harbor.yml
+
 
 hostname: 域名 IP
 並註銷掉 https 之後在驗證
@@ -94,11 +96,20 @@ hostname: 域名 IP
 
 {   
     "dns": ["8.8.8.8","8.8.4.4"],
-    "insecure-registries": ["10.5.0.193"]
+    "insecure-registries": ["10.5.0.251"]
 }
 
-重启服务 systemctl restart docker 重启服务以后需要再跑一遍脚本，80端口才会启动
+重新啟動 docker & systemctl
+a.修改完成後reload組態檔
+sudo systemctl daemon-reload
+ 
+b.重啟docker服務
+sudo systemctl restart docker.service
 $ sudo systemctl daemon-reload && sudo systemctl restart docker
+
+
+重启服务 systemctl restart docker 重启服务以后需要再跑一遍脚本，80端口才会启动
+
 
 vim /etc/hosts
 
@@ -117,10 +128,10 @@ ifconfigvi
     "tlskey": ""
 }    
 
-重新啟動 docker & systemctl
-$ sudo systemctl daemon-reload && sudo systemctl restart docker
 
-$ sudo ./install.sh
+$ docker-compose up -d ：构建（容器）并启动（容器）整个project的所有service
+
+$ sudo ./install.sh --with-trivy
 
 http://rhel.d8zrr00ouhm4.instruqt.io:80
 
@@ -129,11 +140,14 @@ http://rhel.d8zrr00ouhm4.instruqt.io:80
 
 
 ##### issue
+教 https://juejin.cn/post/7081686625704476702
+教 https://blog.51cto.com/lidabai/5846822
+教 
+https://blog.csdn.net/tianmingqing0806/article/details/126423734?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-0-126423734-blog-127602288.pc_relevant_landingrelevant&spm=1001.2101.3001.4242.1&utm_relevant_index=3
 
 https://github.com/aquasecurity/harbor-scanner-trivy/issues/73
 https://gitee.com/jcown/harbor-scanner-trivy
 
-https://blog.csdn.net/tianmingqing0806/article/details/126423734?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-0-126423734-blog-127602288.pc_relevant_landingrelevant&spm=1001.2101.3001.4242.1&utm_relevant_index=3
 
 https://github.com/goharbor/harbor/issues/16748
 https://blog.csdn.net/qq_31977125/article/details/105639085
@@ -164,7 +178,8 @@ https://blog.51cto.com/u_15266039/4967617
   
 ---
 Trivy
-配置trivy
+注意：从其他节点docker客户端登录harbor，必须分发ca.crt到对应客户端
+配置trivy	
 创建一个docker网络，后续的redis与trivy都是用这个网络。网络名与harbor的docker-compose.xml中的网络名相同，这样才能使用内部url互通。当然也可以使用外部地址互通。
 ```sh
 $docker network create harbor_harbor
@@ -175,7 +190,7 @@ $docker run --name redis -d --rm --network harbor_harbor redis:5
 使用docker运行trivy
 因为我是内网需要通过代理才能上公网，所以容器启动时加配置proxy的环境变量，NO_PROXY可以参照harbor和clair的no_proxy配置，否则trivy可能连不上harbor。具体可配置的参数这里有个列表
 
-	 docker run --name trivy-adapter -d --rm \
+docker run --name trivy-adapter -d --rm \
   -p 8181:8181 \
   --env HTTP_PROXY='http://192.168.1.2:8080' \
   --env HTTPS_PROXY='http://192.168.1.2:8080' \
@@ -201,30 +216,56 @@ $ docker run --name trivy-adapter -d --rm \
   --network trivy-adapter \
   docker.io/aquasec/harbor-scanner-trivy:0.2.2
 
+
+# 改良	
+$ docker network create trivy-adapter
+$ docker run --name redis -d --rm --network trivy-adapter redis:5
+	
+	
+# Removed the -u root:root from the docker command (so that the scanner user owned the cache)
+  -e "SCANNER_STORE_REDIS_URL=redis://redis:6379" \
+  -e "SCANNER_JOB_QUEUE_REDIS_URL=redis://redis:6379" \	
+# 檢查以上	
+
+	
+	
 # 改良
-$ docker network create trivy-adapter
-$ docker run --name redis -d --rm --network trivy-adapter redis:5
-$ docker network create trivy-adapter
-$ docker run --name redis -d --rm --network trivy-adapter redis:5
-# Removed the -u root:root from the docker command (so that the scanner user owned the cache)  
+$ docker network create harbor_harbor
+$ docker run --name redis -d --rm --network harbor_harbor redis:5	
+	
 $ docker run --name trivy-adapter -d --rm \
   -p 8080:8080 \
   -u root:root \
   -e "SCANNER_LOG_LEVEL=trace" \
   -e "SCANNER_TRIVY_DEBUG_MODE=true" \
   -e "TRIVY_NON_SSL=true" \
-  -e "SCANNER_STORE_REDIS_URL=redis://redis:6379" \
-  -e "SCANNER_JOB_QUEUE_REDIS_URL=redis://redis:6379" \
+  -e "SCANNER_TRIVY_INSECURE=true" \
+  -e "SCANNER_STORE_REDIS_URL=redis://trivy-redis:6379" \
+  -e "SCANNER_JOB_QUEUE_REDIS_URL=redis://trivy-redis:6379" \
   -e "SCANNER_API_SERVER_ADDR=:8080" \  
-  --network trivy-adapter \
-  docker.io/aquasec/harbor-scanner-trivy:0.2.2
+  --network harbor_harbor \
+  docker.io/aquasec/harbor-scanner-trivy:0.11.0
 
 # 檢查  
 curl -u admin:Harbor12345 https://$HELLO/api/v2.0/projects/library/repositories/busybox
 curl -u admin:Harbor12345 https://10.5.1.17.io/api/v2.0/projects/library/repositories/busybox  
+curl -u admin:Harbor12345 https://10.5.0.251.io/api/v2.0/projects/library/repositories/alpine 
 docker logs -f trivy-adapter
 curl http://trivy-adapter:8181/api/v1/metadata  
 ```
   
 Hi, how to check whether the CVE data download is complete?</br>
 You can check if the metadata.json and trivy.db files are present under the</br> $SCANNER_TRIVY_CACHE_DIR/db directory. It defaults to the /home/scanner/.cache/trivy/db path.</br>
+
+Then download cve from trivy-db : https://github.com/aquasecurity/trivy-db/releases.
+And import , my import cve db commands is, follow from https://github.com/aquasecurity/trivy/blob/master/docs/air-gap.md#put-the-db-file-in-trivys-cache-directory
+
+$docker cp trivy-offline.db.tgz   trivy-adapter:/home/scanner
+$docker exec -it trivy-adapter /bin/sh
+$mkdir -p /home/scanner/.cache/trivy/db
+$cd /home/scanner/.cache/trivy/db
+$mv /home/scanner/trivy-offline.db.tgz .
+$ tar xvf trivy-offline.db.tgz
+x trivy.db
+x metadata.json
+$ rm trivy-offline.db.tgz
