@@ -8,8 +8,7 @@
 [root@docker-cry001 centos64]# echo $HELLO
 Hello
 export HARBORIP="10.5.1.17"
-curl -u admin:Harbor12345 https://$HELLO/api/v2.0/projects/library/repositories/busybox
-curl -u admin:Harbor12345 https://10.5.1.17.io/api/v2.0/projects/library/repositories/busybox
+
 
 https://lab.redhat.com/tracks/sandbox
 
@@ -17,6 +16,10 @@ https://lab.redhat.com/tracks/sandbox
 https://linuxconfig.org/how-to-install-docker-in-rhel-8#
 https://docs.docker.com/engine/install/rhel/
 https://github.com/goharbor/harbor/issues/13553
+
+
+/usr/local   ：在你安裝完了 Linux 之後，基本上所有的配備你都有了，但是軟體總是可以升級的，例如你要升級你的 proxy 服務，則通常軟體預設的安裝地方就是在 /usr/local 中（ local 是『當地』的意思），同時，安裝完畢之後所得到的執行檔，為了與系統原先的執行檔有分別，因此升級後的執行檔通常擺在 /usr/local/bin 這個地方
+
 
 redhat lab
 ```sh
@@ -78,15 +81,26 @@ $ tree .
 ├── LICENSE
 └── prepare
 
-cp harbor.yml.tmpl harbor.ymlcd 
+vim /usr/local/harbor/harbor.yml
+cp harbor.yml.tmpl harbor.yml
+
+hostname: 域名 IP
+並註銷掉 https 之後在驗證
+
 輸入「ifconfig -a」指令來檢視所有網路介面卡資訊
 + ip / http 留
 
-# 新增以下檔案內容 /etc/docker/daemon.json
-{
+# 新增以下檔案內容 vim /etc/docker/daemon.json
+
+{   
+    "dns": ["8.8.8.8","8.8.4.4"],
     "insecure-registries": ["10.5.0.193"]
 }
+
+重启服务 systemctl restart docker 重启服务以后需要再跑一遍脚本，80端口才会启动
 $ sudo systemctl daemon-reload && sudo systemctl restart docker
+
+vim /etc/hosts
 
 ifconfigvi
 10.5.0.193
@@ -109,6 +123,9 @@ $ sudo systemctl daemon-reload && sudo systemctl restart docker
 $ sudo ./install.sh
 
 http://rhel.d8zrr00ouhm4.instruqt.io:80
+
+
+
 
 
 ##### issue
@@ -142,3 +159,72 @@ docker login --username admin --password 1313  https://192.168.0.7
 
 https://github.com/gliderlabs/docker-alpine/issues/183
 https://blog.51cto.com/u_15266039/4967617
+  
+  
+  
+---
+Trivy
+配置trivy
+创建一个docker网络，后续的redis与trivy都是用这个网络。网络名与harbor的docker-compose.xml中的网络名相同，这样才能使用内部url互通。当然也可以使用外部地址互通。
+```sh
+$docker network create harbor_harbor
+
+使用docker运行一个redis供trivy使用
+$docker run --name redis -d --rm --network harbor_harbor redis:5
+
+使用docker运行trivy
+因为我是内网需要通过代理才能上公网，所以容器启动时加配置proxy的环境变量，NO_PROXY可以参照harbor和clair的no_proxy配置，否则trivy可能连不上harbor。具体可配置的参数这里有个列表
+
+	 docker run --name trivy-adapter -d --rm \
+  -p 8181:8181 \
+  --env HTTP_PROXY='http://192.168.1.2:8080' \
+  --env HTTPS_PROXY='http://192.168.1.2:8080' \
+   --env NO_PROXY='.local,portal,clair-adapter,chartmuseum,trivy-adapter,core,redis' \
+  -e "SCANNER_LOG_LEVEL=trace" \
+  -e "SCANNER_TRIVY_DEBUG_MODE=true" \
+  -e "TRIVY_NON_SSL=true" \
+  -e "SCANNER_API_SERVER_ADDR=:8181" \
+  -e "SCANNER_STORE_REDIS_URL=redis://redis:6379" \
+  -e "SCANNER_JOB_QUEUE_REDIS_URL=redis://redis:6379" \
+  --network harbor_harbor \
+  aquasec/harbor-scanner-trivy:0.9.0
+  
+# Daniel
+$ docker network create trivy-adapter
+$ docker run --name redis -d --rm --network trivy-adapter redis:5
+$ docker run --name trivy-adapter -d --rm \
+  -p 8080:8080 \
+  -u root:root \
+  -e "SCANNER_LOG_LEVEL=trace" \
+  -e "SCANNER_STORE_REDIS_URL=redis://redis:6379" \
+  -e "SCANNER_JOB_QUEUE_REDIS_URL=redis://redis:6379" \
+  --network trivy-adapter \
+  docker.io/aquasec/harbor-scanner-trivy:0.2.2
+
+# 改良
+$ docker network create trivy-adapter
+$ docker run --name redis -d --rm --network trivy-adapter redis:5
+$ docker network create trivy-adapter
+$ docker run --name redis -d --rm --network trivy-adapter redis:5
+# Removed the -u root:root from the docker command (so that the scanner user owned the cache)  
+$ docker run --name trivy-adapter -d --rm \
+  -p 8080:8080 \
+  -u root:root \
+  -e "SCANNER_LOG_LEVEL=trace" \
+  -e "SCANNER_TRIVY_DEBUG_MODE=true" \
+  -e "TRIVY_NON_SSL=true" \
+  -e "SCANNER_STORE_REDIS_URL=redis://redis:6379" \
+  -e "SCANNER_JOB_QUEUE_REDIS_URL=redis://redis:6379" \
+  -e "SCANNER_API_SERVER_ADDR=:8080" \  
+  --network trivy-adapter \
+  docker.io/aquasec/harbor-scanner-trivy:0.2.2
+
+# 檢查  
+curl -u admin:Harbor12345 https://$HELLO/api/v2.0/projects/library/repositories/busybox
+curl -u admin:Harbor12345 https://10.5.1.17.io/api/v2.0/projects/library/repositories/busybox  
+docker logs -f trivy-adapter
+curl http://trivy-adapter:8181/api/v1/metadata  
+```
+  
+Hi, how to check whether the CVE data download is complete?</br>
+You can check if the metadata.json and trivy.db files are present under the</br> $SCANNER_TRIVY_CACHE_DIR/db directory. It defaults to the /home/scanner/.cache/trivy/db path.</br>
