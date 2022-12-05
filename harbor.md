@@ -151,6 +151,8 @@ https://www.chenshaowen.com/blog/a-image-management-and-distribution-case-based-
 https://www.linuxprobe.com/harbor-high-availability.html
 https://blog.csdn.net/qq_34556414/article/details/109670343
 https://www.cnblogs.com/zhangxingeng/p/11598708.html
+
+教離線 trivy
 https://blog.csdn.net/weixin_38299404/article/details/116532027?spm=1001.2101.3001.6650.6&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-6-116532027-blog-105639085.pc_relevant_3mothn_strategy_and_data_recovery&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-6-116532027-blog-105639085.pc_relevant_3mothn_strategy_and_data_recovery&utm_relevant_index=9
 https://tw511.com/a/01/45894.html
 
