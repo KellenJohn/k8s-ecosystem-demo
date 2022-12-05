@@ -142,8 +142,15 @@ http://rhel.d8zrr00ouhm4.instruqt.io:80
 ##### issue
 教 https://juejin.cn/post/7081686625704476702
 教 https://blog.51cto.com/lidabai/5846822
-教 
+教 https://blog.csdn.net/qq_34556414/article/details/109670343
+
 https://blog.csdn.net/tianmingqing0806/article/details/126423734?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-0-126423734-blog-127602288.pc_relevant_landingrelevant&spm=1001.2101.3001.4242.1&utm_relevant_index=3
+
+
+https://www.chenshaowen.com/blog/a-image-management-and-distribution-case-based-on-harbor-and-registry.html
+https://www.linuxprobe.com/harbor-high-availability.html
+https://blog.csdn.net/qq_34556414/article/details/109670343
+
 
 https://github.com/aquasecurity/harbor-scanner-trivy/issues/73
 https://gitee.com/jcown/harbor-scanner-trivy
@@ -260,12 +267,16 @@ You can check if the metadata.json and trivy.db files are present under the</br>
 Then download cve from trivy-db : https://github.com/aquasecurity/trivy-db/releases.
 And import , my import cve db commands is, follow from https://github.com/aquasecurity/trivy/blob/master/docs/air-gap.md#put-the-db-file-in-trivys-cache-directory
 
-$docker cp trivy-offline.db.tgz   trivy-adapter:/home/scanner
-$docker exec -it trivy-adapter /bin/sh
-$mkdir -p /home/scanner/.cache/trivy/db
-$cd /home/scanner/.cache/trivy/db
-$mv /home/scanner/trivy-offline.db.tgz .
+$ docker cp trivy-offline.db.tgz   trivy-adapter:/home/scanner
+$ docker exec -it trivy-adapter /bin/sh
+$ mkdir -p /home/scanner/.cache/trivy/db
+$ cd /home/scanner/.cache/trivy/db
+$ mv /home/scanner/trivy-offline.db.tgz .
 $ tar xvf trivy-offline.db.tgz
 x trivy.db
 x metadata.json
 $ rm trivy-offline.db.tgz
+
+
+鏡像清理腳本
+https://medium.com/@shahids89/harbor-container-images-cleanup-automation-1de7cc7c5655
