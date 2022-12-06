@@ -400,4 +400,5 @@ Indexes:
 
 db
 https://schnappi618.github.io/2020/04/08/harbor/harbor%E9%85%8D%E7%BD%AE%E5%A4%96%E9%83%A8%E6%95%B0%E6%8D%AE%E5%BA%93/
-https://blog.51cto.com/lidabai/5218932 
+https://blog.51cto.com/lidabai/5218932
+https://maxchennote.com/blog/postgresql-%E5%B8%B8%E7%94%A8%E6%8C%87%E4%BB%A4-%E5%88%87%E6%8F%9Bdbshow-dbshow-tableshow-user/
