@@ -34,16 +34,13 @@ sudo yum remove docker \
                 docker-engine \
                 podman \
                 runc
+sleep 1
 sudo yum install -y yum-utils
+sleep 1
 sudo yum-config-manager \
              --add-repo \
              https://download.docker.com/linux/rhel/docker-ce.repo       
-             
-# sudo yum install docker-ce docker-ce-cli containerd.io docker-compose-plugin
-# yum list docker-ce --showduplicates | sort -r
-
-# >>>>>>>>>>>>>>>>>>>
-
+sleep 1
 sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
 sudo dnf repolist -v
 dnf list docker-ce --showduplicates | sort -r
@@ -54,6 +51,12 @@ sudo dnf install docker-ce
 sudo systemctl disable firewalld
 sudo systemctl enable --now docker
 
+
+# sudo yum install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+# yum list docker-ce --showduplicates | sort -r
+
+# >>>>>>>>>>>>>>>>>>>
+
 $ systemctl is-active docker
 active
 $ systemctl is-enabled docker
@@ -61,19 +64,23 @@ $ systemctl is-enabled docker
 
 curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o docker-compose
 sudo mv docker-compose /usr/local/bin && sudo chmod +x /usr/local/bin/docker-compose
-
 sudo dnf install python3-pip
 pip3 install docker-compose --user
+
+vim
 ```
 
 
 Harbor script
 
 ```sh
-$ wget https://github.com/goharbor/harbor/releases/download/v2.0.2/harbor-offline-installer-v2.0.2.tgz
-$ tar -xvf harbor-offline-installer-v2.0.2.tgz
-$ cd harbor
-$ tree .
+wget https://github.com/goharbor/harbor/releases/download/v2.0.2/harbor-offline-installer-v2.0.2.tgz
+tar -xvf harbor-offline-installer-v2.0.2.tgz
+cd harbor
+tree .
+cp harbor.yml.tmpl harbor.yml
+
+tree .:wq:
 .
 ├── common.sh
 ├── harbor.v2.0.2.tar.gz
@@ -83,6 +90,7 @@ $ tree .
 └── prepare
 
 cp harbor.yml.tmpl harbor.yml
+
 vim /usr/local/harbor/harbor.yml
 
 
@@ -113,8 +121,16 @@ $ sudo systemctl daemon-reload && sudo systemctl restart docker
 
 vim /etc/hosts
 
-ifconfigvi
+ifconfig
 10.5.0.193
+
+cat << 'EOF' > /etc/docker/daemon.json
+{   
+    "dns": ["8.8.8.8","8.8.4.4"],
+    "insecure-registries": ["10.5.0.182"]
+}
+EOF
+
 
 {
     "experimental": true,
@@ -284,3 +300,104 @@ $ rm trivy-offline.db.tgz
 
 鏡像清理腳本
 https://medium.com/@shahids89/harbor-container-images-cleanup-automation-1de7cc7c5655
+
+
+postgres=# \c registry 
+You are now connected to database "registry" as user "postgres".
+
+registry=# \dn
+  List of schemas
+  Name  |  Owner   
+--------+----------
+ public | postgres
+(1 row)
+
+registry=# \dt public.
+                  List of relations
+ Schema |           Name           | Type  |  Owner   
+--------+--------------------------+-------+----------
+ public | access                   | table | postgres
+ public | admin_job                | table | postgres
+ public | alembic_version          | table | postgres
+ public | artifact                 | table | postgres
+ public | artifact_blob            | table | postgres
+ public | artifact_reference       | table | postgres
+ public | artifact_trash           | table | postgres
+ public | audit_log                | table | postgres
+ public | blob                     | table | postgres
+ public | cve_whitelist            | table | postgres
+ public | harbor_label             | table | postgres
+ public | harbor_resource_label    | table | postgres
+ public | harbor_user              | table | postgres
+ public | immutable_tag_rule       | table | postgres
+ public | job_log                  | table | postgres
+ public | label_reference          | table | postgres
+ public | notification_job         | table | postgres
+ public | notification_policy      | table | postgres
+ public | oidc_user                | table | postgres
+ public | project                  | table | postgres
+ public | project_blob             | table | postgres
+ public | project_member           | table | postgres
+ public | project_metadata         | table | postgres
+ public | properties               | table | postgres
+ public | quota                    | table | postgres
+ public | quota_usage              | table | postgres
+ public | registry                 | table | postgres
+ public | replication_execution    | table | postgres
+ public | replication_policy       | table | postgres
+ public | replication_schedule_job | table | postgres
+ public | replication_task         | table | postgres
+ public | repository               | table | postgres
+ public | retention_execution      | table | postgres
+ public | retention_policy         | table | postgres
+ public | retention_task           | table | postgres
+ public | robot                    | table | postgres
+ public | role                     | table | postgres
+ public | scan_report              | table | postgres
+ public | scanner_registration     | table | postgres
+ public | schedule                 | table | postgres
+ public | schema_migrations        | table | postgres
+ public | tag                      | table | postgres
+ public | user_group               | table | postgres
+(43 rows)
+
+registry=# \d+ public.tag
+                                                           Table "public.tag"
+    Column     |            Type             |                    Modifiers                     | Storage  | Stats target | Description 
+---------------+-----------------------------+--------------------------------------------------+----------+--------------+-------------
+ id            | integer                     | not null default nextval('tag_id_seq'::regclass) | plain    |              | 
+ repository_id | integer                     | not null                                         | plain    |              | 
+ artifact_id   | integer                     | not null                                         | plain    |              | 
+ name          | character varying(255)      | not null                                         | extended |              | 
+ push_time     | timestamp without time zone | default now()                                    | plain    |              | 
+ pull_time     | timestamp without time zone |                                                  | plain    |              | 
+Indexes:
+    "tag_pkey" PRIMARY KEY, btree (id)
+    "unique_tag" UNIQUE CONSTRAINT, btree (repository_id, name)
+Foreign-key constraints:
+    "tag_artifact_id_fkey" FOREIGN KEY (artifact_id) REFERENCES artifact(id)
+
+
+registry-# \d+ public.registry
+                                                                 Table "public.registry"
+     Column      |            Type             |                            Modifiers                            | Storage  | Stats target | Description 
+-----------------+-----------------------------+-----------------------------------------------------------------+----------+--------------+-------------
+ id              | integer                     | not null default nextval('replication_target_id_seq'::regclass) | plain    |              | 
+ name            | character varying(64)       |                                                                 | extended |              | 
+ url             | character varying(256)      |                                                                 | extended |              | 
+ access_key      | character varying(255)      |                                                                 | extended |              | 
+ access_secret   | character varying(4096)     |                                                                 | extended |              | 
+ insecure        | boolean                     | not null default false                                          | plain    |              | 
+ creation_time   | timestamp without time zone | default now()                                                   | plain    |              | 
+ update_time     | timestamp without time zone | default now()                                                   | plain    |              | 
+ credential_type | character varying(16)       |                                                                 | extended |              | 
+ type            | character varying(32)       |                                                                 | extended |              | 
+ description     | text                        |                                                                 | extended |              | 
+ health          | character varying(16)       |                                                                 | extended |              | 
+Indexes:
+    "replication_target_pkey" PRIMARY KEY, btree (id)
+    "unique_target_name" UNIQUE CONSTRAINT, btree (name)
+
+db
+https://schnappi618.github.io/2020/04/08/harbor/harbor%E9%85%8D%E7%BD%AE%E5%A4%96%E9%83%A8%E6%95%B0%E6%8D%AE%E5%BA%93/
+https://blog.51cto.com/lidabai/5218932 
