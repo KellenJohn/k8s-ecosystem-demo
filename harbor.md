@@ -62,8 +62,25 @@ wget https://github.com/goharbor/harbor/releases/download/v2.0.2/harbor-offline-
 tar -xvf harbor-offline-installer-v2.0.2.tgz
 cd harbor
 cp harbor.yml.tmpl harbor.yml
+ifconfig | grep "inet" | awk -F "[: ]+" '{print $3}' | head -n 2 | tail +2
+cat << 'EOF' >> /etc/docker/daemon.json
+{   
+    "dns": ["8.8.8.8","8.8.4.4"],
+    "insecure-registries": ["10.5.1.24"]
+}
+EOF
 
-cat << 'EOF' > /etc/docker/daemon.json
+sudo systemctl daemon-reload && sudo systemctl restart docker
+
+
+
+IP
+ifconfig | grep "inet" | awk -F "[: ]+" '{print $3}' | head -n 2 | tail +2
+
+手動 harbo.yml
+手動 daemon
+
+cat << 'EOF' >> /etc/docker/daemon.json
 {   
     "dns": ["8.8.8.8","8.8.4.4"],
     "insecure-registries": ["10.5.0.182"]
