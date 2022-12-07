@@ -24,6 +24,7 @@ https://github.com/goharbor/harbor/issues/13553
 
 redhat lab
 ```sh
+echo "Step - install Docker on RHEL"
 sudo yum remove docker \
                 docker-client \
                 docker-client-latest \
@@ -34,13 +35,13 @@ sudo yum remove docker \
                 docker-engine \
                 podman \
                 runc
-sleep 1
+echo "Step - install Docker on RHEL"
 sudo yum install -y yum-utils
-sleep 1
+echo "Step - install Docker on RHEL"
 sudo yum-config-manager \
              --add-repo \
              https://download.docker.com/linux/rhel/docker-ce.repo       
-sleep 1
+echo "Step - Download Docker-CE"
 sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
 sudo dnf repolist -v
 dnf list docker-ce --showduplicates | sort -r
@@ -50,6 +51,26 @@ sudo dnf install https://download.docker.com/linux/centos/7/x86_64/stable/Packag
 sudo dnf install docker-ce
 sudo systemctl disable firewalld
 sudo systemctl enable --now docker
+echo "Step - install  Docker-Compose"
+curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o docker-compose
+sudo mv docker-compose /usr/local/bin && sudo chmod +x /usr/local/bin/docker-compose
+echo "Step - install Python"
+sudo dnf install python3-pip
+pip3 install docker-compose --user
+echo "Step - install Harbor offline"
+wget https://github.com/goharbor/harbor/releases/download/v2.0.2/harbor-offline-installer-v2.0.2.tgz
+tar -xvf harbor-offline-installer-v2.0.2.tgz
+cd harbor
+cp harbor.yml.tmpl harbor.yml
+
+cat << 'EOF' > /etc/docker/daemon.json
+{   
+    "dns": ["8.8.8.8","8.8.4.4"],
+    "insecure-registries": ["10.5.0.182"]
+}
+EOF
+
+sudo systemctl daemon-reload && sudo systemctl restart docker
 
 
 # sudo yum install docker-ce docker-ce-cli containerd.io docker-compose-plugin
@@ -62,10 +83,7 @@ active
 $ systemctl is-enabled docker
 
 
-curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o docker-compose
-sudo mv docker-compose /usr/local/bin && sudo chmod +x /usr/local/bin/docker-compose
-sudo dnf install python3-pip
-pip3 install docker-compose --user
+
 
 vim
 ```
