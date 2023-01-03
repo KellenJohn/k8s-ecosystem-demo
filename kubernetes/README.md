@@ -3,3 +3,13 @@
 * Configmap
 * Secret
 * [ITHome](https://ithelp.ithome.com.tw/articles/10195786)
+
+
+```sh
+# 查看 k8s node 資訊
+kubectl get nodes
+podman pull mysql:5.7
+kubectl apppy -f mysql.yaml
+
+
+```
