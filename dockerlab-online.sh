@@ -6,10 +6,10 @@ sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
 # download k3d/k3s
 curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash
-wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash
 
 # install 
 k3d cluster create demo --servers 1 --agents 3
+
 # k3s 安裝
 curl -sfL https://get.k3s.io | sh - 
 # Check for Ready node, takes ~30 seconds 
