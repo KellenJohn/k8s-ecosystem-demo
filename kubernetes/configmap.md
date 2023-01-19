@@ -110,7 +110,7 @@ spec:
 ```
 $ kubectl exec -it configmap-demo-pod -- sh
 / # ls
-bin     config  dev     etc     home    lib     media   mnt     opt     proc    root    run     sbin    srv     sys     tmp     usr     var
+bin config dev etc home lib media mnt opt proc root run sbin srv sys tmp usr var
 / # cd config
 /config # ls
 game.properties            user-interface.properties
