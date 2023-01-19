@@ -151,20 +151,21 @@ data:
     maxmemory-policy allkeys-lru 
 ```
 
-範例 - 沒成功載入(想一想)
+範例 - 沒成功載入
 ```
 apiVersion: v1
 kind: Pod
 metadata:
-  name: mypod
+  name: configmap-demo-pod
 spec:
   containers:
-  - name: mypod
-    image: redis
-    volumeMounts:
-    - name: foo
-      mountPath: "/etc/foo"
-      readOnly: true
+    - name: demo
+      image: alpine
+      command: ["sleep", "3600"]
+      volumeMounts:
+      - name: foo
+        mountPath: "/etc/foo"
+        readOnly: true
   volumes:
   - name: foo
     configMap:
