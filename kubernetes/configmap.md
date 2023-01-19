@@ -40,10 +40,31 @@ data:
   user-interface.properties: |
     color.good=purple
     color.bad=yellow
-    allow.textmode=true    
+    allow.textmode=true   
 ```
 
-configmap/configure-pod.yaml
+範例 - configmap(驗證重新 reload) 
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: game-demo
+data:
+  # 类属性键；每一个键都映射到一个简单的值
+  player_initial_lives: "999"
+  ui_properties_file_name: "user-interface.properties"
+
+  # 类文件键
+  game.properties: |
+    enemy.types=aliens_new,monsters_new
+    player.maximum-lives=999    
+  user-interface.properties: |
+    color.good=purple_new
+    color.bad=yellow_new
+    allow.textmode=true 
+```
+
+範例 - configmap/configure-pod.yaml
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -82,8 +103,45 @@ spec:
         path: "game.properties"
       - key: "user-interface.properties"
         path: "user-interface.properties"
-
 ```
+
+
+驗證與解說
+```
+$ kubectl exec -it configmap-demo-pod sh
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+/ # ls
+bin     config  dev     etc     home    lib     media   mnt     opt     proc    root    run     sbin    srv     sys     tmp     usr     var
+/ # cd config
+/config # ls
+game.properties            user-interface.properties
+/config # echo $PLAYER_INITIAL_LIVES
+3
+/config # echo $UI_PROPERTIES_FILE_NAME
+user-interface.properties
+/config # cat user-interface.properties 
+color.good=purple
+color.bad=yellow
+allow.textmode=true 
+/config # 
+# 
+# 等一下，我們作個手腳，把 configmap 重新 reload 成新的
+#
+/config # echo $PLAYER_INITIAL_LIVES
+3
+/config # cat user-interface.properties
+color.good=purple_new
+color.bad=yellow_new
+allow.textmode=true 
+/config # 
+
+# 可以發現環境變數依舊是 3(即使是我們調整了 confingmap)，因為他是 env 帶入無法達到熱更新
+# 若是 configmap 以 volume 掛載進行，可以看到可進行熱更新(顏色有帶 _)
+# 但是應用程式服務又是另一個要判斷，有可能像資料庫長連線或是 API 依舊是以舊的 configmap 資料
+# 建議要測試一下，對 Pod / Deployment 進行重啟
+```
+
+---
 
 範例：
 說明：把文件的內容寫入至 configmap，之後在透過 volume 方式來引用這個 configmap，就等同把想要的文件引入至 Pod 中
