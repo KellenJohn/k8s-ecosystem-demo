@@ -5,7 +5,7 @@ curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stabl
 sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
 # download k3d/k3s
-curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash
+# curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash
 
 # install 
 k3d cluster create demo --servers 1 --agents 3
