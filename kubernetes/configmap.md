@@ -151,6 +151,7 @@ data:
     maxmemory-policy allkeys-lru 
 ```
 
+範例 - 沒成功載入(想一想)
 ```
 apiVersion: v1
 kind: Pod
@@ -167,10 +168,12 @@ spec:
   volumes:
   - name: foo
     configMap:
-      name: myconfigmap
+      name: example-redis-config
 ```
 
 
+
+範例 - 成功載入
 ```
 apiVersion: v1
 kind: Pod
@@ -206,6 +209,17 @@ spec:
         - key: redis-config
           path: redis.conf
 ```
+檢查工作
+```bash
+kubectl exec -it mypod -- redis-cli
+127.0.0.1:6379> CONFIG GET maxmemory
+1) "maxmemory"
+2) "2097152"
+127.0.0.1:6379> CONFIG GET maxmemory-policy
+1) "maxmemory-policy"
+2) "allkeys-lru"
+```
+
 
 ---
 
