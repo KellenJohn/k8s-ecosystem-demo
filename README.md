@@ -18,3 +18,9 @@
  * 參考 dockerlab-online.sh 進行前置處理後，即可使用 Kubernetes on-line 
  * 優點：一開始限時四小時，但時間到了還在操作話會到二十四小時，幾乎無限時間任你玩
  * 缺點：界面操作性稍差 😢
+
+
+#### Future
+* 用 on-line lab 作 worker 達到不停機之作業(7*24)
+
+ 
