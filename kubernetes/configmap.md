@@ -213,7 +213,7 @@ spec:
 說明：把文件的內容寫入至 configmap，之後在透過 volume 方式來引用這個 configmap，就等同把想要的文件引入至 Pod 中
 
 ```bash
-指令 kubectl create configmap cm2 --from-file=file1
+# 指令 kubectl create configmap cm2 --from-file=file1
 # 文件名為 key，而內容為 value
 # 試著把 /etc/host 這個作為 configmap
 
@@ -235,8 +235,7 @@ ff02::2 ip6-allrouters
 BinaryData
 ====
 Events: <none>
-
-# 或是
+# ---------------------- 或是 -----------------------
 $ kubectl get cm my2 -o yaml
 apiVersion: v1
 data:
@@ -248,7 +247,8 @@ metadata:
   namespace: default
   resourceVersion: "4746"
   uid: 03ff5f34-6b3d-4e9b-ae44-119d4f49b1b3
-
+  
+# ---------------------- 或是 -----------------------
 # 引用不同文件(由 key 來處理要抓那份資訊)
 $ kubectl get cm my2 -o jsonpath='{.data.hosts}'
 127.0.0.1       localhost
@@ -258,7 +258,7 @@ ff00::0 ip6-mcastprefix
 ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 192.168.0.27    worker1
-
+# ---------------------- 查看 -----------------------
 $ cat /etc/hosts
 127.0.0.1 localhost
 fe00::0 ip6-localnet
