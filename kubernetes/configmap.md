@@ -151,30 +151,37 @@ data:
     maxmemory-policy allkeys-lru 
 ```
 
-範例 - 沒成功載入
+範例
 ```
 apiVersion: v1
 kind: Pod
 metadata:
-  name: configmap-demo-pod
+  name: mypod
 spec:
   containers:
-    - name: demo
-      image: alpine
-      command: ["sleep", "3600"]
-      volumeMounts:
-      - name: foo
-        mountPath: "/etc/foo"
-        readOnly: true
+  - name: mypod
+    image: redis
+    volumeMounts:
+    - name: foo
+      mountPath: "/etc/foo"
+      readOnly: true
   volumes:
   - name: foo
     configMap:
       name: example-redis-config
 ```
+驗證
+```bash
+$ kubectl  exec -it  configmap-demo-pod -- sh
+/ # cd /etc/foo
+/etc/foo # ls
+redis-config
+/etc/foo # cat redis-config 
+maxmemory 2mb
+maxmemory-policy allkeys-lru 
+```
 
-
-
-範例 - 成功載入
+範例
 ```
 apiVersion: v1
 kind: Pod
@@ -212,6 +219,7 @@ spec:
 ```
 檢查工作
 ```bash
+# 通过 kubectl exec 使用 redis-cli 再次检查 Redis Pod，查看是否已应用配置
 kubectl exec -it mypod -- redis-cli
 127.0.0.1:6379> CONFIG GET maxmemory
 1) "maxmemory"
