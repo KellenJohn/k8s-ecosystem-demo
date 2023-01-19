@@ -108,8 +108,7 @@ spec:
 
 驗證與解說
 ```
-$ kubectl exec -it configmap-demo-pod sh
-kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+$ kubectl exec -it configmap-demo-pod -- sh
 / # ls
 bin     config  dev     etc     home    lib     media   mnt     opt     proc    root    run     sbin    srv     sys     tmp     usr     var
 / # cd config
