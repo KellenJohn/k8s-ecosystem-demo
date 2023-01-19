@@ -20,6 +20,12 @@
  * 缺點：界面操作性稍差 😢
 
 
+#### 可這樣玩
+ * On-line lab 版控至 Github/Gitlab 等
+ * API server on line
+ * 臨時工作找工人：Dockerfile edit or push image to your image registry
+ * 調研 Open Source
+
 #### Future
 * 用 on-line lab 作 worker 達到不停機之作業(7*24)
 
