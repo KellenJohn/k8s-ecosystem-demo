@@ -29,7 +29,9 @@ https://icloudnative.io/posts/getting-started-with-argocd/
 https://www.readfog.com/a/1676342497667813376
 https://rammusxu.github.io/2019/07/16/GitOps-Argo-CD-Note/
 https://blog.51cto.com/u_15315026/5078430
-
+# Downward API
+https://www.twblogs.net/a/61046f82a90470e2175feb83
+https://kubernetes.io/zh-cn/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/
 
 https://stackoverflow.com/questions/67262769/access-argocd-server
 https://stackoverflow.com/questions/71030111/how-to-login-to-argocd-cli-non-interactive-in-ci-like-github-actions
