@@ -4,6 +4,18 @@
 * Secret
 * [ITHome](https://ithelp.ithome.com.tw/articles/10195786)
 
+1. Pod 訪問
+```sh
+# 直接轉發至本地，不建議在測試環境
+kubectl port-forward petclinic 8080:8080
+
+root:~$ kubectl port-forward petclinic 8080:8080
+Forwarding from 127.0.0.1:8080 -> 8080
+Handling connection for 8080
+```
+2、blue green
+調整 service.yaml spec.selector.version 為 v1.0.1
+
 
 ```sh
 # 查看 k8s node 資訊
